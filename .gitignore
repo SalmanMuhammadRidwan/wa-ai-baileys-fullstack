@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules/
+
+# Environment variables (API Keys & Rahasia)
+.env
+
+# Sesi Login WhatsApp Pribadi (JANGAN DI-PUSH KE GITHUB!)
+auth_info_baileys/
+session_prototype/
+
+# File Database Lokal (Akan ter-generate otomatis di laptop anggota tim saat node index.js dijalankan)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Logs & OS files
+*.log
+.DS_Store
+Thumbs.db

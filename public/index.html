@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="id" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WA AI Chatbot & Auto-Agenda Manager (Baileys API)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-950 text-slate-100 min-h-screen flex font-sans">
+    <!-- SIDEBAR: 6 MENU UTAMA SESUAI MOCKUP -->
+    <aside
+      class="w-72 bg-slate-900/80 border-r border-slate-800 p-5 flex flex-col justify-between"
+    >
+      <div>
+        <div class="mb-8">
+          <h1 class="text-xl font-bold text-emerald-400">WA AI Bot Manager</h1>
+          <p class="text-xs text-slate-400 mt-1">
+            Baileys Multi-Device & Cron Engine
+          </p>
+        </div>
+        <nav class="space-y-2">
+          <button
+            onclick="switchMenu('menu1')"
+            id="btn-menu1"
+            class="menu-btn w-full text-left px-4 py-3 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 font-medium"
+          >
+            1. Dashboard & Analitik
+          </button>
+          <button
+            onclick="switchMenu('menu2')"
+            id="btn-menu2"
+            class="menu-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300"
+          >
+            2. Sesi & Login Perangkat
+          </button>
+          <button
+            onclick="switchMenu('menu3')"
+            id="btn-menu3"
+            class="menu-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300"
+          >
+            3. Kontak & Grup Target
+          </button>
+          <button
+            onclick="switchMenu('menu4')"
+            id="btn-menu4"
+            class="menu-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300"
+          >
+            4. Jadwal 10 Agenda Otomatis
+          </button>
+          <button
+            onclick="switchMenu('menu5')"
+            id="btn-menu5"
+            class="menu-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300"
+          >
+            5. Konfigurasi AI & Memory
+          </button>
+          <button
+            onclick="switchMenu('menu6')"
+            id="btn-menu6"
+            class="menu-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300"
+          >
+            6. Riwayat Log Broadcast
+          </button>
+        </nav>
+      </div>
+      <div
+        class="p-4 rounded-xl bg-slate-800/60 border border-slate-700 text-xs"
+      >
+        <div class="font-semibold text-slate-300">Status Sesi Baileys:</div>
+        <div id="sidebar-status" class="text-amber-400 font-bold mt-1">
+          Memuat...
+        </div>
+        <div id="sidebar-phone" class="text-slate-400 mt-1">-</div>
+      </div>
+    </aside>
+
+    <!-- KONTEN UTAMA -->
+    <main class="flex-1 p-8 overflow-y-auto">
+      <!-- MENU 1: DASHBOARD -->
+      <section id="menu1" class="menu-section space-y-6">
+        <h2 class="text-2xl font-bold">
+          Menu 1: Dashboard & Ringkasan 7 Tabel Database
+        </h2>
+        <div class="grid grid-cols-4 gap-4">
+          <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+            <p class="text-xs text-slate-400">Status Koneksi (`wa_sessions`)</p>
+            <p
+              id="stat-status"
+              class="text-2xl font-bold text-emerald-400 mt-2"
+            >
+              -
+            </p>
+          </div>
+          <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+            <p class="text-xs text-slate-400">Agenda Aktif (`agendas`)</p>
+            <p id="stat-agendas" class="text-2xl font-bold text-sky-400 mt-2">
+              10
+            </p>
+          </div>
+          <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+            <p class="text-xs text-slate-400">
+              Target Grup/Kontak (`contacts_groups`)
+            </p>
+            <p
+              id="stat-contacts"
+              class="text-2xl font-bold text-purple-400 mt-2"
+            >
+              0
+            </p>
+          </div>
+          <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+            <p class="text-xs text-slate-400">
+              Log Terkirim (`broadcast_logs`)
+            </p>
+            <p id="stat-logs" class="text-2xl font-bold text-amber-400 mt-2">
+              0
+            </p>
+          </div>
+        </div>
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+          <h3 class="font-semibold text-lg mb-2 text-emerald-400">
+            Arsitektur Zero-Web-Login Broadcast
+          </h3>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            Sistem ini menyimpan kredensial autentikasi WhatsApp menggunakan
+            <code>useMultiFileAuthState</code> dan mengeksekusi 10 agenda di
+            tabel <code>agendas</code> secara otomatis melalui background worker
+            <code>node-cron</code>. Sekalipun halaman web ini ditutup, bot tetap
+            mengirim pengingat agenda dan membalas pesan AI 24/7.
+          </p>
+        </div>
+      </section>
+
+      <!-- MENU 2: KONEKSI & LOGIN WA -->
+      <section id="menu2" class="menu-section hidden space-y-6">
+        <h2 class="text-2xl font-bold">
+          Menu 2: Manajemen Sesi & Autentikasi Perangkat (`wa_sessions`)
+        </h2>
+        <div
+          class="p-6 rounded-2xl bg-slate-900 border border-slate-800 flex items-center gap-8"
+        >
+          <div
+            id="qr-container"
+            class="w-56 h-56 bg-slate-800 rounded-xl flex items-center justify-center p-4 text-center text-xs text-slate-400"
+          >
+            Menunggu status QR...
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-lg font-semibold">
+              Tautkan Perangkat WhatsApp (Sekali di Awal)
+            </h3>
+            <p class="text-sm text-slate-400">
+              1. Buka WhatsApp di HP Anda &rarr; Perangkat Tertaut &rarr;
+              Tautkan Perangkat.
+            </p>
+            <p class="text-sm text-slate-400">
+              2. Scan QR Code di samping atau lihat langsung di terminal VS
+              Code.
+            </p>
+            <p class="text-sm text-emerald-400 pt-2">
+              Setelah terhubung, sesi disimpan secara persisten sehingga 10
+              agenda berjalan otomatis tanpa perlu login ulang.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- MENU 3: KONTAK & GRUP -->
+      <section id="menu3" class="menu-section hidden space-y-6">
+        <h2 class="text-2xl font-bold">
+          Menu 3: Manajemen Kontak & Grup Target (`contacts_groups`)
+        </h2>
+        <div class="flex gap-3">
+          <input
+            id="inp-cname"
+            placeholder="Nama Grup / Kontak"
+            class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+          />
+          <input
+            id="inp-cjid"
+            placeholder="62812xxxx / ID Grup @g.us"
+            class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm w-72"
+          />
+          <button
+            onclick="addContact()"
+            class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold"
+          >
+            + Tambah Target
+          </button>
+        </div>
+        <div
+          class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden"
+        >
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-800/60 text-slate-300">
+              <tr>
+                <th class="p-3">ID</th>
+                <th class="p-3">Nama Target</th>
+                <th class="p-3">JID WhatsApp</th>
+                <th class="p-3">Tipe</th>
+              </tr>
+            </thead>
+            <tbody
+              id="table-contacts"
+              class="divide-y divide-slate-800"
+            ></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MENU 4: 10 AGENDA OTOMATIS -->
+      <section id="menu4" class="menu-section hidden space-y-6">
+        <h2 class="text-2xl font-bold">
+          Menu 4: Penjadwalan 10 Agenda Otomatis (`agendas`)
+        </h2>
+        <div
+          class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden"
+        >
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-800/60 text-slate-300">
+              <tr>
+                <th class="p-3">ID</th>
+                <th class="p-3">Judul Agenda</th>
+                <th class="p-3">Jadwal Eksekusi</th>
+                <th class="p-3">Isi Pesan</th>
+                <th class="p-3">Aksi Uji Coba</th>
+              </tr>
+            </thead>
+            <tbody id="table-agendas" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MENU 5: KONFIGURASI AI & MEMORY -->
+      <section id="menu5" class="menu-section hidden space-y-6">
+        <h2 class="text-2xl font-bold">
+          Menu 5: Konfigurasi AI (`ai_configs`) & Memori (`chat_histories`)
+        </h2>
+        <div
+          class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4"
+        >
+          <label class="block text-sm text-slate-300 font-medium"
+            >System Instruction / Prompt AI:</label
+          >
+          <textarea
+            id="inp-prompt"
+            rows="3"
+            class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-sm"
+          ></textarea>
+          <button
+            onclick="saveAiConfig()"
+            class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold"
+          >
+            Simpan Konfigurasi AI
+          </button>
+        </div>
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 p-5">
+          <h3 class="font-semibold mb-3 text-sm text-slate-300">
+            Riwayat Percakapan Terakhir (`chat_histories`):
+          </h3>
+          <div
+            id="list-chats"
+            class="space-y-2 text-xs max-h-64 overflow-y-auto"
+          ></div>
+        </div>
+      </section>
+
+      <!-- MENU 6: RIWAYAT LOG BROADCAST -->
+      <section id="menu6" class="menu-section hidden space-y-6">
+        <h2 class="text-2xl font-bold">
+          Menu 6: Riwayat Log Pesan & Audit Trail (`broadcast_logs`)
+        </h2>
+        <div
+          class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden"
+        >
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-800/60 text-slate-300">
+              <tr>
+                <th class="p-3">ID Log</th>
+                <th class="p-3">ID Agenda</th>
+                <th class="p-3">Penerima (JID)</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Waktu Kirim</th>
+              </tr>
+            </thead>
+            <tbody id="table-logs" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      function switchMenu(id) {
+        document
+          .querySelectorAll(".menu-section")
+          .forEach((el) => el.classList.add("hidden"));
+        document.getElementById(id).classList.remove("hidden");
+        document.querySelectorAll(".menu-btn").forEach((btn) => {
+          btn.className =
+            "menu-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300";
+        });
+        document.getElementById("btn-" + id).className =
+          "menu-btn w-full text-left px-4 py-3 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 font-medium";
+      }
+
+      async function loadData() {
+        const res = await fetch("/api/overview");
+        const data = await res.json();
+
+        document.getElementById("sidebar-status").innerText =
+          data.session.status.toUpperCase();
+        document.getElementById("sidebar-phone").innerText = data.session.phone;
+        document.getElementById("stat-status").innerText =
+          data.session.status.toUpperCase();
+        document.getElementById("stat-agendas").innerText = data.agendas.length;
+        document.getElementById("stat-contacts").innerText =
+          data.contacts.length;
+        document.getElementById("stat-logs").innerText = data.logs.length;
+
+        const qrBox = document.getElementById("qr-container");
+        if (data.session.status === "connected") {
+          qrBox.innerHTML =
+            '<div class="text-emerald-400 font-bold">✅ TERHUBUNG<br>' +
+            data.session.phone +
+            "</div>";
+        } else if (data.session.qr) {
+          qrBox.innerHTML = `<img src="${data.session.qr}" class="w-full h-full rounded-lg"/>`;
+        }
+
+        document.getElementById("table-agendas").innerHTML = data.agendas
+          .map(
+            (a) => `
+                <tr>
+                    <td class="p-3 font-bold text-emerald-400">#${a.id}</td>
+                    <td class="p-3 font-medium">${a.title}</td>
+                    <td class="p-3 text-slate-400">${a.schedule_label}<br><span class="text-xs text-slate-500">${a.cron_expression}</span></td>
+                    <td class="p-3 text-slate-300 max-w-md">${a.message_body}</td>
+                    <td class="p-3"><button onclick="triggerAgenda(${a.id})" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold">Share Sekarang</button></td>
+                </tr>
+            `,
+          )
+          .join("");
+
+        document.getElementById("table-contacts").innerHTML = data.contacts
+          .map(
+            (c) => `
+                <tr><td class="p-3">#${c.id}</td><td class="p-3 font-medium">${c.name}</td><td class="p-3 text-slate-400">${c.jid}</td><td class="p-3">${c.type}</td></tr>
+            `,
+          )
+          .join("");
+
+        document.getElementById("table-logs").innerHTML = data.logs
+          .map(
+            (l) => `
+                <tr><td class="p-3">#${l.id}</td><td class="p-3">Agenda #${l.agenda_id}</td><td class="p-3">${l.recipient_jid}</td><td class="p-3 text-emerald-400 font-semibold">${l.status}</td><td class="p-3 text-slate-400">${l.sent_at}</td></tr>
+            `,
+          )
+          .join("");
+
+        if (data.aiConfig && !document.getElementById("inp-prompt").value) {
+          document.getElementById("inp-prompt").value =
+            data.aiConfig.system_prompt;
+        }
+
+        document.getElementById("list-chats").innerHTML = data.chats
+          .map(
+            (c) => `
+                <div class="p-2 rounded bg-slate-800/70"><span class="font-bold text-emerald-400">[${c.role}]</span> (${c.sender_jid}): ${c.message}</div>
+            `,
+          )
+          .join("");
+      }
+
+      async function triggerAgenda(id) {
+        await fetch("/api/agendas/" + id + "/trigger", { method: "POST" });
+        alert("Agenda #" + id + " sedang dikirim ke seluruh target!");
+        loadData();
+      }
+
+      async function addContact() {
+        const name = document.getElementById("inp-cname").value;
+        const jid = document.getElementById("inp-cjid").value;
+        if (!name || !jid) return;
+        await fetch("/api/contacts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            jid,
+            type: jid.includes("@g.us") ? "group" : "contact",
+          }),
+        });
+        document.getElementById("inp-cname").value = "";
+        document.getElementById("inp-cjid").value = "";
+        loadData();
+      }
+
+      async function saveAiConfig() {
+        const system_prompt = document.getElementById("inp-prompt").value;
+        await fetch("/api/ai-config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system_prompt,
+            temperature: 0.7,
+            is_active: true,
+          }),
+        });
+        alert("Konfigurasi AI berhasil disimpan!");
+      }
+
+      loadData();
+      setInterval(loadData, 4000);
+    </script>
+  </body>
+</html>
